@@ -62,7 +62,7 @@ new tags, etc.
 You should have a VP Link loadable ready to upload.  Either use a loadable from one of the samples, or if you have VP Link running locally,
 create one from your running VP Link model using CreateBonsaiInterface.exe and CreateBonsaiLoadable.exe. Even better, use the
 Bonsai-enabled VP Link interface to create your customized loadable file as shown below.  More information about creating a customized
-loadable is found [here](samples/simpletank/README.md#for-vplink-users)
+loadable is found [here](samples/simpletank/README.md#for-vp-link-users)
 ![Bonsai tags page](docs/BonsaiCreateLoadable.png)
 
 * Once you have a loadable, from the bonsai web page, click the Add Simulator button in the left panel.  ![Add Simulator button image](docs/BonsaiAddSim.png)
