@@ -41,7 +41,7 @@ that has the current level and the level from the previous time step.
 * Start the VP3 Control Panel from the Start menu.  It is under the VP Link folder in the Start Menu.
 * Ensure that a VP Link server is running.  If the middle area of the VP3 Control Panel is empty, then click the "Start Server" button.
 * Double-click the SimpleTank.rev file from this directory to open the VP Link GUI for this model.
-* From the Commands menu, choose ["Database Information"](../../docs/CommandsDatabaseInfo.png) to ensure that there are 16 tags loaded in the server.  If not, you will need to clear the tags (Commands/Clear Tags)
+* From the Commands menu, choose !["Database Information"](../../docs/CommandsDatabaseInfo.png) to ensure that there are 16 tags loaded in the server.  If not, you will need to clear the tags (Commands/Clear Tags)
 and reload the tag database (Commands/Load Tags.../Choose simpletank.tag)
 * Now with the tags loaded, use the "Next" button on the toolbar to get to the page that shows the picture of the tank.
 * On this page, you can enable the VP Link calculations (use the "Calcs" checkbox at the right of the toolbar), and manipulate the inlet valve position to change
