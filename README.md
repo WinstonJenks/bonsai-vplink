@@ -8,7 +8,7 @@ Other users can use the [samples](samples/README.md) and documentation to experi
 
 ## Installation
 
-VP Link Users:
+### VP Link Users
 * Copy the executables to the CapeSoftware\VPLink3 directory.
 
 * Use the Bonsai Tag Integration page from a Bonsai-enabled .rev file to add VP Link tags to your SimState and SimAction structures.
@@ -18,7 +18,7 @@ Bonsai Loadable page from the Bonsai.rev file to create your customized VP Link 
 * [Add a Simulator](#usage-adding-a-vp-link-simulator-to-your-workspace) to your workspace by uploading the loadable to the Bonsai web site and train a brain at scale.
 
 
-Other Users:
+### Other Users
 * Browse the documentation and use one of the existing [sample simulations](samples/README.md) to explore how to train a brain with the Inkling language.
 * [Add a Simulator](#usage-adding-a-vp-link-simulator-to-your-workspace) to your workspace by uploading the loadable to the Bonsai web site and train a brain at scale.
 
