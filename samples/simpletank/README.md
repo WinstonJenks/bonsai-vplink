@@ -64,7 +64,7 @@ lesson StartFromRandomLevel
 
 * Now you are ready to train the brain. Click the green Train button.
 It will take a minute or two to get started, but soon enough you will see the brain communicating to multiple simulators as it begins the training.
-With 10 simulators you should start to see some progress after about 15 minutes, and the brain completes the trainin after about 150,000 iterations.
+With 10 simulators you should start to see some progress after about 15 minutes, and the brain completes the training after about 150,000 iterations.
 ![Brain Training Performance](SimpleTankBrainTrainingPerformance.png)
 
 
