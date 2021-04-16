@@ -30,7 +30,7 @@ will remove the ability of Bonsai to control it.  How does the brain perform whe
 ## For VP Link Users
 
 If you have VP Link installed locally, you can use the SimpleTank.rev file to run the simulation locally.
-Ensure that the [tools](../tools/README.md) are installed and try the following to build a new loadable that can improve
+Ensure that the [tools](../../tools/README.md) are installed and try the following to build a new loadable that can improve
 the training performance of the brain.
 
 In the sample model, only the current level is sent in the state to the brain.  It might be useful if the brain also
