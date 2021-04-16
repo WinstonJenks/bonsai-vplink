@@ -27,7 +27,7 @@ If you just want to see something working, use the supplied [Inkling file](simpl
 
 ## Upload the loadable to create a sim
 
-* Now follow the [instructions](../README.md#usage-adding-a-vp-link-simulator-to-your-workspace) to create a simulator using this loadable. Once you start the simulator and launch it to create the Inkling interface structures,
+* With your loadable ready, follow the [instructions](../../README.md#usage-adding-a-vp-link-simulator-to-your-workspace) to create a simulator using this loadable. Once you start the simulator and launch it to create the Inkling interface structures,
 you should see that the LI100 member of the SimState is an array with two elements.  Once you are done with that and have a simulator created in Bonsai, come back here to create a brain and add the Inkling
 
 ## Create a brain
