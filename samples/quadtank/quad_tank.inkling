@@ -1,0 +1,282 @@
+inkling "2.0"
+using Goal
+using Math
+using Number
+
+const PIDThreshold = 5
+const LowSPThreshold = 25
+const HighSPThreshold = 25
+const TankVolume = 8835.73
+const TankVolumeToPercent = TankVolume/100
+
+# Define a type that represents the per-iteration state
+# returned by the simulator.
+type SimState {
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank1Volume: number<0.0 .. 8835.73>[2],
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank2Volume: number<0.0 .. 8835.73>[2],
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank3Volume: number<0.0 .. 8835.73>,
+    # VP Link analog tag (0.0,8835.73), EU=cm3; Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank4Volume: number<0.0 .. 8835.73>,
+    # VP Link analog tag (0.0,100.0), EU=%; Target setpoint for Tank 1
+    Tank1_SP: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Target setpoint for Tank 1
+    Tank2_SP: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Valve opening from Pump #1 to Tank #1
+    Gamma1: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Valve opening from Pump #2 to Tank #2  In QT5, This value is calculated as GammaSum - Gamma1
+    Gamma2: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,200.0), EU=%; Sum of the percentages of Gamma1 and Gamma2 (note max is 200)
+    GammaSum: number<0.0 .. 200.0>,
+}
+
+# Define a type that represents the per-iteration action
+# accepted by the simulator.
+type SimAction {
+    # VP Link analog tag (0.0,100.0), EU=%; Percentage of maximum speed of pump #1
+    Pump1Speed: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Percentage of maximum speed of pump #2
+    Pump2Speed: number<0.0 .. 100.0>,
+}
+
+# Per-episode configuration that can be sent to the simulator.
+# All iterations within an episode will use the same configuration.
+type SimConfig {
+    # VP Link configuration (deprecated); Built from CreateBonsaiInterface v0.9.1
+    _configNumber: number,
+    # Name of VP Link .icf file to load at start of episode. Available files are ['QuadTank_v4.icf', 'QuadTank_v5.icf']
+    _initialConditions: string,
+    # VP Link timestep (secs)
+    _timeStep: number,
+    # Bonsai timestep (secs)
+    _reportEvery: number,
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank1Volume: number<0.0 .. 8835.73>,
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank2Volume: number<0.0 .. 8835.73>,
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank3Volume: number<0.0 .. 8835.73>,
+    # VP Link analog tag (0.0,8835.73), EU=cm3; Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank4Volume: number<0.0 .. 8835.73>,
+    # VP Link analog tag (0.0,100.0), EU=%; Target setpoint for Tank 1
+    Tank1_SP: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Target setpoint for Tank 1
+    Tank2_SP: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Valve opening from Pump #1 to Tank #1
+    Gamma1: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,100.0), EU=%; Valve opening from Pump #2 to Tank #2  In QT5, This value is calculated as GammaSum - Gamma1
+    Gamma2: number<0.0 .. 100.0>,
+    # VP Link analog tag (0.0,200.0), EU=%; Sum of the percentages of Gamma1 and Gamma2 (note max is 200)
+    GammaSum: number<0.0 .. 200.0>,
+}
+
+# Make an Observable SimState a little smaller
+type ObservableState {
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank1Volume: number<0.0 .. 100>[2],
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank2Volume: number<0.0 .. 100>[2],
+    # VP Link analog tag (0.0,8835.73), Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank3Volume: number<0.0 .. 100>,
+    # VP Link analog tag (0.0,8835.73), EU=cm3; Level Tag at press =14.7; lfngen:\otherusers\Winston\QuadTank\QuadTank.xlsx[LFNStd]
+    Tank4Volume: number<0.0 .. 100>,
+    # VP Link analog tag (0.0,100.0), EU=%; Target setpoint for Tank 1
+    Tank1_SP: number<0.0 .. 100>,
+    # VP Link analog tag (0.0,100.0), EU=%; Target setpoint for Tank 1
+    Tank2_SP: number<0.0 .. 100>,
+    # Gamma1: number,
+    # Gamma2: number,
+}
+
+simulator Simulator(action: SimAction, config: SimConfig): SimState {
+    # Automatically launch the simulator with this
+    # registered package name.
+    package "Quadtank"
+}
+
+function DistanceReward( s: SimState)
+{
+    var tank1Reward: number
+    var tank2Reward: number
+    var tank1Error: number
+    var tank2Error: number
+    var tank1PrecisionReward: number
+    var tank2PrecisionReward: number
+    var halfdiff: number = 5
+    var precisionRewardFactor = 2
+    tank1Error = Math.Abs(s.Tank1_SP-s.Tank1Volume[0])
+    tank2Error = Math.Abs(s.Tank2_SP-s.Tank2Volume[0])
+    tank1Reward = Math.E**(-((tank1Error/halfdiff)**2))
+    tank2Reward = Math.E**(-((tank2Error/halfdiff)**2))
+    tank1PrecisionReward = 0
+    tank2PrecisionReward = 0
+    if ( tank1Error < halfdiff/2 )
+    {
+    tank1PrecisionReward = 1 - Math.Sqrt(tank1Error/(halfdiff/2))
+    }
+    if ( tank2Error < halfdiff/2 )
+    {
+    tank2PrecisionReward = 1 - Math.Sqrt(tank2Error/(halfdiff/2))
+    }
+    return tank1Reward + tank2Reward + precisionRewardFactor*(tank1PrecisionReward + tank2PrecisionReward)
+}
+
+function LinearReward(s: SimState)
+{
+    var Normalizer = 25
+    var tank1Error = Math.Abs(s.Tank1_SP-s.Tank1Volume[0])
+    var tank2Error = Math.Abs(s.Tank2_SP-s.Tank2Volume[0])
+    return (Normalizer -tank1Error - tank2Error)/Normalizer
+}
+
+function NormalizeState(s: SimState) : ObservableState
+{
+    # NOTE: Gamma1 and Gamma2 are NOT returned in this structure
+    # because sending extraneous inputs to the brain is wasteful.
+    return {
+        Tank1Volume: [s.Tank1Volume[0]/TankVolumeToPercent,
+        s.Tank1Volume[1]/TankVolumeToPercent],
+        Tank2Volume: [s.Tank2Volume[0]/TankVolumeToPercent,
+        s.Tank2Volume[1]/TankVolumeToPercent],
+        Tank3Volume: s.Tank3Volume/TankVolumeToPercent,
+        Tank4Volume: s.Tank4Volume/TankVolumeToPercent,
+        Tank1_SP: s.Tank1_SP,
+        Tank2_SP: s.Tank2_SP,
+        # Gamma1: s.Gamma1,
+        # Gamma2: s.Gamma2,
+    }
+}
+
+# Define a concept graph
+graph (input: SimState): SimAction {
+
+    concept Normalized(input): ObservableState {
+        programmed NormalizeState
+    }
+
+    # Note: as written, this concept ends up having to learn to deal with the entire range of setpoints. Could split into a HighLow and LowHigh... 
+    concept MoreThanOne(Normalized): SimAction { 
+        curriculum { # The source of training for this concept is a simulator # that takes an action as an input and outputs a state. 
+            source Simulator 
+            # reward DistanceReward 
+            
+            goal (s: SimState) { 
+                drive LevelSP1: s.Tank1Volume[0] in Goal.Sphere(s.Tank1_SP, 0.5) 
+                drive LevelSP2: s.Tank2Volume[0] in Goal.Sphere(s.Tank2_SP, 0.5) 
+                # avoid Overflow: s.Tank1Volume[0] in Goal.RangeAbove(TankVolume) 
+                # avoid TankEmpty: s.Tank1Volume[0] in Goal.RangeBelow(5) 
+                } 
+            training { 
+                EpisodeIterationLimit: 20, # Brain has 30 "_reportEvery" time steps to make this work 
+                NoProgressIterationLimit : 400000 
+                # Set the next two entries if you are using a reward, comment out if using a Goal 
+                # An episode is considered "successful" if reward > this value. 
+                # LessonRewardThreshold: 85, # Move on to the next lesson, once this fraction of assessment episodes is "successful" 
+                # LessonSuccessThreshold: 0.8,
+            }
+            lesson GammaSum14
+            {
+            # Scenarios set the values in the SimConfig to drive the starting state
+                scenario
+                {
+                # configNumber: < 1, 2, 3, >
+                _configNumber: 0,
+                _initialConditions: "QuadTank_v5.icf",
+                _timeStep: 10,
+                _reportEvery: 30,
+                Tank1Volume: number <10..90 step 2>, # BRAIN needs to see all sorts of starting levels...
+                Tank2Volume: number <10..90 step 2>, # ...in both tanks.
+                Tank3Volume: number <10..90 step 2>, # BRAIN needs to see all sorts of starting levels...
+                Tank4Volume: number <10..90 step 2>, # ...in these tanks, too.
+                Tank1_SP: number <10..80 step 1>, # BRAIN needs to see all sorts of target setpoints...
+                Tank2_SP: number <10..80 step 1>, # ...in both tanks.
+                GammaSum: 1.4,
+                Gamma1: number <0.6 .. 0.7>,
+                # Gamma2: GammaSum - Gamma1,
+                }
+            }
+            lesson GammaSum12
+            {
+            # Scenarios set the values in the SimConfig to drive the starting state
+                scenario
+                {
+                # configNumber: < 1, 2, 3, >
+                _configNumber: 0,
+                _initialConditions: "QuadTank_v5.icf",
+                _timeStep: 10,
+                _reportEvery: 30,
+                Tank1Volume: number <10..90 step 2>, # BRAIN needs to see all sorts of starting levels...
+                Tank2Volume: number <10..90 step 2>, # ...in both tanks.
+                Tank3Volume: number <10..90 step 2>, # BRAIN needs to see all sorts of starting levels...
+                Tank4Volume: number <10..90 step 2>, # ...in these tanks, too.
+                Tank1_SP: number <10..80 step 1>, # BRAIN needs to see all sorts of target setpoints...
+                Tank2_SP: number <10..80 step 1>, # ...in both tanks.
+                GammaSum: number <1.2 .. 1.4>,
+                Gamma1: number <0.6 .. 0.7>,
+                # Gamma2: GammaSum - Gamma1,
+                }
+            }
+        }
+    }
+    concept LessThanOne(Normalized): SimAction {
+    curriculum {
+        # The source of training for this concept is a simulator
+        # that takes an action as an input and outputs a state.
+        source Simulator
+        # reward DistanceReward
+        goal (s: SimState)
+        {
+            drive LevelSP1: s.Tank1Volume[0] in Goal.Sphere(s.Tank1_SP, 0.5)
+            drive LevelSP2: s.Tank2Volume[0] in Goal.Sphere(s.Tank2_SP, 0.5)
+        # avoid Overflow: s.Tank1Volume[0] in Goal.RangeAbove(100)
+        # avoid TankEmpty: s.Tank1Volume[0] in Goal.RangeBelow(5)
+        }
+        training {
+            EpisodeIterationLimit: 20, # Brain has 30 "_reportEvery" time steps to make this work
+            NoProgressIterationLimit : 400000
+            # Set the next two entries if you are using a reward, comment out if using a Goal
+            # An episode is considered "successful" if reward > this value.
+            # LessonRewardThreshold: 85,
+            # Move on to the next lesson, once this fraction of assessment episodes is "successful"
+            # LessonSuccessThreshold: 0.8,
+        }
+        lesson GammaBoth7
+        {
+            # Scenarios set the values in the SimConfig to drive the starting state
+            scenario
+            {
+            # configNumber: < 1, 2, 3, >
+            _configNumber: 0,
+            _initialConditions: "QuadTank_v5.icf",
+            _timeStep: 10,
+            _reportEvery: 30,
+            Tank1Volume: number <10..90 step 2>, # BRAIN needs to see all sorts of starting levels...
+            Tank2Volume: number <10..90 step 2>, # ...in both tanks.
+            Tank3Volume: number <10..90 step 2>, # BRAIN needs to see all sorts of starting levels...
+            Tank4Volume: number <10..90 step 2>, # ...in these tanks, too.
+            Tank1_SP: number <10..80 step 1>, # BRAIN needs to see all sorts of target setpoints...
+            Tank2_SP: number <10..80 step 1>, # ...in both tanks.
+            GammaSum: number <0.5 .. 0.99>,
+            Gamma1: number <0.3 .. 0.7>, # WDJHUH Note that 0.5 - 0.7 leads to a weird situation, which is just Gamma2 = 0
+            # Gamma2: 0.4,
+            }
+        }
+    }
+    }
+    output concept chooseMode(input, LessThanOne, MoreThanOne) : SimAction
+    {
+        programmed function chooseSomething(state: SimState, ltOne: SimAction, gtOne: SimAction)
+        {
+            if state.Gamma1 + state.Gamma2 < 1
+            {
+                return ltOne
+            } else
+            {
+                return gtOne
+            }
+        }
+    }
+}
+
